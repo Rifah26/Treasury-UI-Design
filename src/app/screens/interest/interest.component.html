@@ -1,0 +1,285 @@
+<main class="main" [formGroup]="form">
+  <div class="form-card">
+
+    <div class="form-card-header">
+      <div class="form-card-header-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+        </svg>
+      </div>
+      <div class="form-card-header-text">
+        <h2>New Money Market Deal</h2>
+        <p>Step 3 of 3 — Configure interest rate, accrual basis and payment settings</p>
+      </div>
+    </div>
+
+    <app-step-progress [currentStep]="3" [step1Complete]="step1Complete" [step2Complete]="step2Complete"></app-step-progress>
+
+    <!-- Rate type tabs -->
+    <div class="tab-bar">
+      <button type="button" class="tab-btn" [class.active]="isFixed" (click)="setRateType('Fixed')">
+        <span class="tab-badge fixed">FXD</span> Fixed Rate
+      </button>
+      <button type="button" class="tab-btn" [class.active]="!isFixed" (click)="setRateType('Floating')">
+        <span class="tab-badge floating">FLT</span> Floating Rate
+      </button>
+    </div>
+
+    <div class="form-body">
+
+      <!-- ══ FIXED TAB ══ -->
+      <ng-container *ngIf="isFixed">
+        <div class="form-section-title">Fixed Rate Configuration</div>
+        <div class="form-grid" style="margin-bottom:20px">
+
+          <div class="field-group">
+            <label for="interestRate">Interest Rate <span class="req">*</span></label>
+            <div class="field-wrap">
+              <input id="interestRate" type="number" formControlName="interestRate"
+                     step="0.0001" min="0" placeholder="0.0000"
+                     class="has-suffix" [class.error]="hasError('interestRate')"
+                     style="font-variant-numeric:tabular-nums">
+              <span class="field-suffix">%</span>
+            </div>
+            <div *ngIf="hasError('interestRate')" class="field-error">Interest rate is required</div>
+            <div *ngIf="!hasError('interestRate')" class="field-hint">Annual interest rate as a percentage</div>
+          </div>
+
+          <div class="field-group">
+            <label for="interestRule">Interest Rule <span class="req">*</span></label>
+            <select id="interestRule" formControlName="interestRule" [class.error]="hasError('interestRule')">
+              <option value="">Select day count basis…</option>
+              <option value="ACT/365">ACT/365 — Actual/365</option>
+              <option value="ACT/360">ACT/360 — Actual/360</option>
+              <option value="30/360">30/360 — Bond Basis</option>
+              <option value="30E/360">30E/360 — Eurobond Basis</option>
+            </select>
+            <div *ngIf="hasError('interestRule')" class="field-error">Interest rule is required</div>
+          </div>
+
+        </div>
+      </ng-container>
+
+      <!-- ══ FLOATING TAB ══ -->
+      <ng-container *ngIf="!isFixed">
+        <div class="form-section-title">Floating Rate Configuration</div>
+        <div class="form-grid three" style="margin-bottom:20px">
+
+          <div class="field-group">
+            <label for="benchmark">Benchmark <span class="req">*</span></label>
+            <select id="benchmark" formControlName="benchmark" [class.error]="hasError('benchmark')">
+              <option value="">Select benchmark…</option>
+              <option value="SOFR">SOFR — Secured Overnight Financing Rate</option>
+              <option value="LIBOR">LIBOR — London Interbank Offered Rate</option>
+              <option value="KIBOR">KIBOR — Karachi Interbank Offered Rate</option>
+            </select>
+            <div *ngIf="hasError('benchmark')" class="field-error">Benchmark is required</div>
+            <div *ngIf="benchmarkValue !== null" class="field-hint">Current: {{ benchmarkValue }}%</div>
+          </div>
+
+          <div class="field-group">
+            <label for="benchmarkPeriod">Benchmark Period <span class="req">*</span></label>
+            <select id="benchmarkPeriod" formControlName="benchmarkPeriod" [class.error]="hasError('benchmarkPeriod')">
+              <option value="">Select tenor…</option>
+              <option value="ON">ON — Overnight</option>
+              <option value="1W">1W — 1 Week</option>
+              <option value="1M">1M — 1 Month</option>
+              <option value="3M">3M — 3 Months</option>
+              <option value="6M">6M — 6 Months</option>
+              <option value="1Y">1Y — 1 Year</option>
+            </select>
+            <div *ngIf="hasError('benchmarkPeriod')" class="field-error">Benchmark period is required</div>
+          </div>
+
+          <div class="field-group">
+            <label for="spread">Spread</label>
+            <div class="field-wrap">
+              <input id="spread" type="number" formControlName="spread"
+                     step="0.0001" placeholder="0.0000"
+                     class="has-suffix" style="font-variant-numeric:tabular-nums">
+              <span class="field-suffix">%</span>
+            </div>
+            <div class="field-hint">Spread over benchmark rate</div>
+          </div>
+
+        </div>
+
+        <!-- Computed rate banner -->
+        <div *ngIf="computedRate !== null" class="rate-calc-banner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <div class="rate-calc-expr">
+            <span>{{ form.get('benchmark')?.value }} ({{ benchmarkValue }}%)</span>
+            <span class="sep">+</span>
+            <span>Spread ({{ form.get('spread')?.value || 0 }}%)</span>
+            <span class="sep">=</span>
+            <span class="result">{{ computedRate }}%</span>
+          </div>
+          <span style="margin-left:auto; color:var(--text-secondary); font-size:11px">All-in Rate</span>
+        </div>
+
+        <div class="form-grid" style="margin-bottom:20px">
+
+          <div class="field-group">
+            <label>Effective Interest Rate <span class="optional">(auto-calculated)</span></label>
+            <div class="field-readonly" [class.highlight]="computedRate !== null">
+              {{ computedRate !== null ? computedRate + '%' : '— Select benchmark and spread' }}
+            </div>
+            <div class="field-hint">Benchmark + Spread, recalculated at each fixing</div>
+          </div>
+
+          <div class="field-group">
+            <label for="fixingFrequency">Fixing Frequency <span class="req">*</span></label>
+            <select id="fixingFrequency" formControlName="fixingFrequency" [class.error]="hasError('fixingFrequency')">
+              <option value="">Select frequency…</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+            </select>
+            <div *ngIf="hasError('fixingFrequency')" class="field-error">Fixing frequency is required</div>
+          </div>
+
+          <div class="field-group">
+            <label for="floatInterestRule">Interest Rule <span class="req">*</span></label>
+            <select id="floatInterestRule" formControlName="interestRule" [class.error]="hasError('interestRule')">
+              <option value="">Select day count basis…</option>
+              <option value="ACT/365">ACT/365 — Actual/365</option>
+              <option value="ACT/360">ACT/360 — Actual/360</option>
+              <option value="30/360">30/360 — Bond Basis</option>
+              <option value="30E/360">30E/360 — Eurobond Basis</option>
+            </select>
+            <div *ngIf="hasError('interestRule')" class="field-error">Interest rule is required</div>
+          </div>
+
+        </div>
+      </ng-container>
+
+      <!-- ══ SHARED FIELDS ══ -->
+      <div class="form-section-title">Rate Settings</div>
+      <div class="form-grid" style="margin-bottom:20px">
+
+        <div class="field-group">
+          <label for="rateSettingDate">Rate Setting Date <span class="req">*</span></label>
+          <input id="rateSettingDate" type="date" formControlName="rateSettingDate"
+                 [class.error]="hasError('rateSettingDate')">
+          <div *ngIf="hasError('rateSettingDate')" class="field-error">Rate setting date is required</div>
+        </div>
+
+        <div class="field-group">
+          <label>Market Rate <span class="optional">(live feed)</span></label>
+          <div class="market-rate-display">
+            <span class="market-rate-dot"></span>
+            <span class="market-rate-value">{{ marketRate }}%</span>
+            <span class="market-rate-label">Fed Funds Effective Rate · {{ marketRateDate }}</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="backStub">Back Stub Period</label>
+          <div class="field-wrap">
+            <input id="backStub" type="number" formControlName="backStub"
+                   min="0" placeholder="0"
+                   class="has-suffix" style="font-variant-numeric:tabular-nums">
+            <span class="field-suffix">days</span>
+          </div>
+          <div class="field-hint">Number of days for back stub period (optional)</div>
+        </div>
+
+        <div class="field-group">
+          <label for="settlementFreq">Interest Settlement Frequency <span class="req">*</span></label>
+          <select id="settlementFreq" formControlName="settlementFreq" [class.error]="hasError('settlementFreq')">
+            <option value="">Select frequency…</option>
+            <option value="maturity">At Maturity</option>
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+          </select>
+          <div *ngIf="hasError('settlementFreq')" class="field-error">Settlement frequency is required</div>
+        </div>
+
+      </div>
+
+      <!-- First Day Interest checkbox -->
+      <div style="margin-bottom:20px">
+        <div class="checkbox-row"
+             [class.checked]="form.get('firstDayInterest')?.value"
+             (click)="toggleFirstDay()">
+          <div class="custom-checkbox" [class.checked]="form.get('firstDayInterest')?.value">
+            <svg *ngIf="form.get('firstDayInterest')?.value" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <span class="checkbox-label">Include First Day Interest</span>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="form-section-title">Additional Information</div>
+      <div class="field-group" style="margin-bottom:24px">
+        <label for="remarks">Remarks <span class="optional">(optional)</span></label>
+        <textarea id="remarks" formControlName="remarks" rows="3"
+                  placeholder="Enter any additional notes or remarks for this deal…"></textarea>
+      </div>
+
+    </div><!-- /form-body -->
+
+    <!-- Footer -->
+    <div class="form-footer">
+      <div class="footer-left">
+        <button type="button" class="btn btn-ghost" (click)="onClear()">Clear</button>
+        <button type="button" class="btn btn-ghost" routerLink="/deal/deposit-dates">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+      </div>
+      <div class="footer-right">
+        <button type="button" class="btn btn-ghost" routerLink="/deals">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="onSaveOnHold()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Save On Hold
+        </button>
+        <button type="button" class="btn btn-navy" (click)="onSaveAndRelease()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Save &amp; Release
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /form-card -->
+</main>
+
+<!-- ── Confirm Modal ── -->
+<div *ngIf="showConfirmModal" class="modal-overlay" (click)="cancelModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-icon" [class.hold]="showConfirmModal === 'hold'" [class.release]="showConfirmModal === 'release'">
+      <svg *ngIf="showConfirmModal === 'hold'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+      </svg>
+      <svg *ngIf="showConfirmModal === 'release'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </div>
+    <h3>{{ showConfirmModal === 'hold' ? 'Save Deal On Hold' : 'Save & Release Deal' }}</h3>
+    <p *ngIf="showConfirmModal === 'hold'">
+      The deal will be saved with status <strong>On Hold</strong> and can be released later.
+    </p>
+    <p *ngIf="showConfirmModal === 'release'">
+      The deal will be saved and immediately <strong>released for processing</strong>.
+    </p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" (click)="cancelModal()">Cancel</button>
+      <button type="button"
+        [class]="showConfirmModal === 'hold' ? 'btn btn-primary' : 'btn btn-navy'"
+        (click)="confirmSave()">
+        Confirm
+      </button>
+    </div>
+  </div>
+</div>

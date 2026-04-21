@@ -1,0 +1,189 @@
+<main class="main" [formGroup]="form">
+  <div class="form-card">
+
+    <!-- Card header -->
+    <div class="form-card-header">
+      <div class="form-card-header-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+        </svg>
+      </div>
+      <div class="form-card-header-text">
+        <h2>New Money Market Deal</h2>
+        <p>Step 1 of 3 — Enter deal details and counterparty</p>
+      </div>
+    </div>
+
+    <!-- Step progress -->
+    <app-step-progress
+      [currentStep]="1"
+      [step1Complete]="step1Complete"
+      [step2Complete]="step2Complete">
+    </app-step-progress>
+
+    <!-- Form body -->
+    <div class="form-body">
+
+      <div class="form-section-title">Deal Information</div>
+
+      <div class="form-grid">
+
+        <!-- Deal Date -->
+        <div class="field-group">
+          <label for="dealDate">Deal Date <span class="req">*</span></label>
+          <input id="dealDate" type="date" formControlName="dealDate"
+                 [class.error]="hasError('dealDate')">
+        </div>
+
+        <!-- Time (readonly) -->
+        <div class="field-group">
+          <label for="dealTime">Time <span class="optional">(auto-filled)</span></label>
+          <input id="dealTime" type="text" formControlName="dealTime" class="readonly">
+          <div class="field-hint">System time at deal creation</div>
+        </div>
+
+        <!-- Portfolio -->
+        <div class="field-group">
+          <label for="portfolio">Portfolio <span class="req">*</span></label>
+          <div class="field-wrap icon-left-wrap">
+            <span class="icon-left">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </span>
+            <select id="portfolio" formControlName="portfolio"
+                    class="has-icon-left" [class.error]="hasError('portfolio')">
+              <option value="">Select portfolio…</option>
+              <option *ngFor="let p of portfolios" [value]="p.value">{{ p.label }}</option>
+            </select>
+          </div>
+          <div *ngIf="hasError('portfolio')" class="field-error">Portfolio is required</div>
+        </div>
+
+        <!-- Deal ID (readonly) -->
+        <div class="field-group">
+          <label for="dealId">Deal ID <span class="optional">(auto-generated)</span></label>
+          <div class="field-wrap">
+            <input id="dealId" type="text" formControlName="dealId"
+                   class="readonly" value="Auto-generated" style="font-style:italic">
+            <span class="autogen-badge">AUTO</span>
+          </div>
+        </div>
+
+        <!-- Dealer -->
+        <div class="field-group">
+          <label for="dealer">Dealer <span class="req">*</span></label>
+          <select id="dealer" formControlName="dealer" [class.error]="hasError('dealer')">
+            <option value="">Select dealer…</option>
+            <option *ngFor="let d of dealers" [value]="d">{{ d }}</option>
+          </select>
+          <div *ngIf="hasError('dealer')" class="field-error">Dealer is required</div>
+        </div>
+
+        <!-- Instrument -->
+        <div class="field-group">
+          <label for="instrument">Instrument <span class="req">*</span></label>
+          <select id="instrument" formControlName="instrument" [class.error]="hasError('instrument')">
+            <option value="">Select instrument…</option>
+            <option *ngFor="let i of instruments" [value]="i">{{ i }}</option>
+          </select>
+          <div *ngIf="hasError('instrument')" class="field-error">Instrument is required</div>
+        </div>
+
+      </div><!-- /form-grid -->
+
+      <!-- Counterparty — full width -->
+      <div class="field-group" style="margin-bottom: 20px;">
+        <label>Counterparty <span class="req">*</span></label>
+        <div class="dropdown-wrap">
+          <div class="field-wrap icon-left-wrap">
+            <span class="icon-left">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </span>
+            <input
+              type="text"
+              class="has-icon-left"
+              [class.error]="hasError('counterparty')"
+              [value]="cpySelected ? cpySelected.name : cpyQuery"
+              (input)="onCpyInput($any($event.target).value)"
+              (click)="cpySelected && clearCounterparty()"
+              (blur)="closeCpyDropdown()"
+              placeholder="Search counterparty by name or ID…"
+            >
+            <span *ngIf="cpySelected" class="autogen-badge">{{ cpySelected.id }}</span>
+          </div>
+          <div *ngIf="cpyOpen && cpyFiltered.length > 0" class="dropdown-list">
+            <div *ngFor="let c of cpyFiltered"
+                 class="dropdown-list-item"
+                 (mousedown)="selectCounterparty(c)">
+              <div class="cpy-name">{{ c.name }}</div>
+              <div class="cpy-meta">{{ c.id }} · LEI: {{ c.lei }}</div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="hasError('counterparty')" class="field-error">Counterparty is required</div>
+        <div *ngIf="!hasError('counterparty')" class="field-hint">
+          Type at least 1 character to search by name or ID
+        </div>
+      </div>
+
+      <div class="form-section-title">Classification</div>
+
+      <div class="form-grid" style="margin-bottom: 24px;">
+
+        <!-- Deal Type -->
+        <div class="field-group">
+          <label for="dealType">Deal Type <span class="req">*</span></label>
+          <select id="dealType" formControlName="dealType" [class.error]="hasError('dealType')">
+            <option value="">Select deal type…</option>
+            <option value="Accept">Accept</option>
+            <option value="Place">Place</option>
+          </select>
+          <div *ngIf="hasError('dealType')" class="field-error">Deal type is required</div>
+          <div *ngIf="form.get('dealType')?.value === 'Accept'" class="field-hint">
+            Accept: you are receiving funds from the counterparty
+          </div>
+          <div *ngIf="form.get('dealType')?.value === 'Place'" class="field-hint">
+            Place: you are placing funds with the counterparty
+          </div>
+        </div>
+
+        <!-- Pricing Type -->
+        <div class="field-group">
+          <label for="pricingType">Pricing Type <span class="req">*</span></label>
+          <select id="pricingType" formControlName="pricingType" [class.error]="hasError('pricingType')">
+            <option value="">Select pricing type…</option>
+            <option value="Normal">Normal</option>
+            <option value="Discounting">Discounting</option>
+          </select>
+          <div *ngIf="hasError('pricingType')" class="field-error">Pricing type is required</div>
+        </div>
+
+      </div>
+
+    </div><!-- /form-body -->
+
+    <!-- Footer -->
+    <div class="form-footer">
+      <div class="footer-left">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span>Fields marked <strong>*</strong> are required</span>
+      </div>
+      <div class="footer-right">
+        <button type="button" class="btn btn-ghost" routerLink="/deals">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="onNext()">
+          Next: Deposit &amp; Dates
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /form-card -->
+</main>

@@ -1,0 +1,35 @@
+<div class="step-progress">
+  <div class="step-track">
+    <ng-container *ngFor="let step of steps; let i = index; let last = last">
+
+      <!-- Step node -->
+      <div
+        class="step-item"
+        [class.clickable]="canNavigate(i)"
+        [routerLink]="canNavigate(i) ? step.route : null"
+        [attr.aria-label]="'Go to ' + step.label"
+      >
+        <div class="step-circle" [ngClass]="stateOf(i)">
+          <!-- Done: checkmark -->
+          <ng-container *ngIf="stateOf(i) === 'done'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </ng-container>
+          <!-- Active / pending: number -->
+          <ng-container *ngIf="stateOf(i) !== 'done'">{{ i + 1 }}</ng-container>
+        </div>
+
+        <div>
+          <div class="step-label" [ngClass]="stateOf(i)">{{ step.label }}</div>
+          <div class="step-sublabel">{{ step.sublabel }}</div>
+        </div>
+      </div>
+
+      <!-- Connector (not after last step) -->
+      <div *ngIf="!last" class="step-connector" [class.done]="isConnectorDone(i)"></div>
+
+    </ng-container>
+  </div>
+</div>
