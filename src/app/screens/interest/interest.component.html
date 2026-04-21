@@ -176,7 +176,9 @@
           </div>
         </div>
 
-        <div class="field-group">
+
+
+        <!-- <div class="field-group">
           <label for="backStub">Back Stub Period</label>
           <div class="field-wrap">
             <input id="backStub" type="number" formControlName="backStub"
@@ -186,6 +188,26 @@
           </div>
           <div class="field-hint">Number of days for back stub period (optional)</div>
         </div>
+         -->
+
+         <div class="field-group">
+          <label for="backStub">Back Stub Period</label>
+          <select id="backStub" formControlName="backStub" [class.error]="hasError('backStub')">
+            <option value="">Ending Stub</option>
+            <option value="short_stub">Short Stub</option>
+            <option value="beginning_stub">Beginning Stub</option>
+            <option value="long_stub">Long Stub</option>
+          </select>
+          <div *ngIf="hasError('backStub')" class="field-error">Back stub is required</div>
+        </div>
+
+
+
+
+        
+
+
+
 
         <div class="field-group">
           <label for="settlementFreq">Interest Settlement Frequency <span class="req">*</span></label>
